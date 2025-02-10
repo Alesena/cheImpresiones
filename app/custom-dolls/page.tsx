@@ -1,7 +1,6 @@
 "use client";
 import ImagesPerso from "@/components/ImagesPerso";
 import "@/app/globals.css";
-import Image from "next/image";
 import { useState, ChangeEvent } from "react";
 import DescriptionInput from "@/components/DescriptionInput";
 import ButtonAccess from "@/components/ButtonAccess";

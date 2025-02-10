@@ -1,6 +1,8 @@
 import { useState, ChangeEvent } from 'react';
-
-export default function DescriptionInput({placeholderText}:any) {
+interface DescriptionInputProps {
+  placeholderText: string;
+}
+export default function DescriptionInput({placeholderText}:DescriptionInputProps){
   const [description, setDescription] = useState('');
 
   const handleDescriptionChange = (event: ChangeEvent<HTMLTextAreaElement>) => {

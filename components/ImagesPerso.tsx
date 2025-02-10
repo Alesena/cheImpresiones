@@ -1,6 +1,12 @@
 import React from 'react';
 import Image from 'next/image';
-export default function ImagesFunko({ src, width, height }: any) {
+
+interface ImagesFunkoProps {
+    src: string;
+    width: number;
+    height: number; 
+}
+export default function ImagesFunko({ src, width, height }:ImagesFunkoProps) {
 
 
     return (

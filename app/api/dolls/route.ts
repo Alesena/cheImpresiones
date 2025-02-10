@@ -1,4 +1,5 @@
-// app/api/dolls/route.ts
+{/**
+  // app/api/dolls/route.ts
 import { NextResponse } from 'next/server';
 // import nodemailer from 'nodemailer'; // Ejemplo si quisieras mandar correo
 
@@ -28,4 +29,7 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+}
+
+**/
 }
