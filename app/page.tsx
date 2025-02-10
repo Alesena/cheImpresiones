@@ -1,101 +1,168 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import Image from "next/image";
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+/** Props para el componente WordReveal */
+type WordRevealProps = {
+  word: string;
+  index: number; // Para calcular el delay
+};
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+/**
+ * Componente que hace aparecer cada palabra con IntersectionObserver,
+ * y además aplica un delay escalonado según su índice (index).
+ */
+function WordReveal({ word, index }: WordRevealProps) {
+  const [visible, setVisible] = useState<boolean>(false);
+  const wordRef = useRef<HTMLSpanElement | null>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.unobserve(entry.target); // Se deja de observar una vez visible
+        }
+      },
+      {
+        threshold: 0.1, // se activa cuando al menos un 10% del elemento es visible
+      }
+    );
+
+    if (wordRef.current) {
+      observer.observe(wordRef.current);
+    }
+
+    return () => {
+      if (wordRef.current) {
+        observer.unobserve(wordRef.current);
+      }
+    };
+  }, []);
+
+  return (
+    <span
+      ref={wordRef}
+      style={{
+        // Cada palabra se retrasa 100ms multiplicado por su índice
+        transitionDelay: `${index * 100}ms`,
+      }}
+      className={`
+        inline-block
+        transition-opacity
+        duration-500  /* Duración de 500ms en la opacidad */
+        ease-in-out
+        ${visible ? "opacity-100" : "opacity-0"}
+      `}
+    >
+      {word}&nbsp;
+    </span>
+  );
+}
+
+export default function HomePage() {
+  const textoSobreNosotros = `
+    ¿Te imaginas tener un Funko único, con todos los detalles que te representan? En Che!, hacemos realidad tus ideas. Diseñamos funkos personalizados con los accesorios, atuendos y características que tú elijas, para que tu colección sea realmente exclusiva.
+  `;
+  const textoSobreNosotros2 = `
+  Además, contamos con servicios profesionales de impresión 3D. Desde la creación de prototipos hasta piezas decorativas o regalos personalizados, transformamos tus proyectos en objetos tangibles con la más alta calidad. Nuestro equipo combina la pasión por el diseño con la tecnología más avanzada para asegurar resultados excepcionales.
+`;
+  
+
+  return (
+    <div>
+      {/* Hero Section con video de fondo */}
+      <section className="relative h-screen flex flex-col justify-center items-center text-center overflow-hidden">
+        {/* Video de fondo */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute top-0 left-0 w-full h-full object-cover z-0"
+        >
+          <source src="/videos/fondo.mp4" type="video/mp4" />
+          Tu navegador no soporta videos HTML5.
+        </video>
+
+        {/* Contenido superpuesto */}
+        <div className="relative z-10 bg-black/50 p-8 rounded-lg">
+          <h1 className="text-5xl font-bold mb-4">Funkos personalizados</h1>
+          <Link href="/custom-dolls">
+            <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+              ¡Pedi el tuyo!
+            </button>
+          </Link>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </section>
+
+      {/* Sección Sobre Nosotros */}
+      <section id="seccion-info" className="py-16 bg-white text-black">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-8">Sobre Nosotros</h2>
+
+          <p className="text-2xl leading-relaxed text-center max-w-2xl mx-auto">
+            {textoSobreNosotros
+              .trim()
+              .split(/\s+/)
+              .map((word, i) => (
+                <WordReveal key={`${word}-${i}`} word={word} index={i} />
+              ))}
+          </p>
+        </div>
+      </section>
+
+      {/* Sección Servicios */}
+      <section className="py-16 bg-gray-100 text-black">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-8">Nuestros diseños</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-white p-6 rounded-lg shadow-lg flex justify-center items-center">
+              <Image
+                src="/images/funko2.jpg"
+                alt="Funko 1"
+                width={300}
+                height={100}
+              ></Image>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-lg flex justify-center items-center ">
+            <Image
+                src="/images/funko3.jpg"
+                alt="Funko 1"
+                width={300}
+                height={300}
+              ></Image>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+            <Image
+                className="mx-auto"
+                src="/images/funko4.jpg"
+                alt="Funko 1"
+                width={300}
+                height={300}
+              ></Image>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Sección mas diseños */}
+      <section id="seccion-info" className="py-16 bg-white text-black">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-8">Mas diseños</h2>
+
+          <p className="text-2xl leading-relaxed text-center max-w-2xl mx-auto">
+            {textoSobreNosotros2
+              .trim()
+              .split(/\s+/)
+              .map((word, i) => (
+                <WordReveal key={`${word}-${i}`} word={word} index={i} />
+              ))}
+          </p>
+        </div>
+      </section>
     </div>
   );
 }
