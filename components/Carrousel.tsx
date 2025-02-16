@@ -22,7 +22,7 @@ export default function Carrousel({ images, selectedImage, onSelectImage }: Carr
       </div>
 
       {/* Previsualizaciones de imágenes */}
-      <div className="w-full overflow-x-auto flex space-x-2 md:space-x-4 py-2 scrollbar-hide">
+      <div className="w-full overflow-x-auto flex space-x-2 md:space-x-4 py-2 scrollbar-hide items-center justify-center">
         {images.map((imagen, index) => (
           <div
             key={index}
@@ -34,7 +34,7 @@ export default function Carrousel({ images, selectedImage, onSelectImage }: Carr
             <img
               src={imagen.src}
               alt={imagen.alt}
-              className="w-full h-full object-cover rounded-lg"
+              className="w-full h-full object-cover rounded-lg "
             />
           </div>
         ))}
