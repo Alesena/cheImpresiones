@@ -52,10 +52,6 @@ export default function PersonalizarFunko() {
     window.location.href = "https://api.whatsapp.com/send?phone=11111111111&text=Hola,%20quiero%20personalizar%20mi%20Funko";
   };
 
-  const setSelectedImage = (image: string) => {
-    setImagenSeleccionada(image);
-  };
-
   return (
     <>
       <AnimatePresence>
