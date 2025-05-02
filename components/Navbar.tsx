@@ -5,12 +5,10 @@ import { useEffect, useRef } from "react"; // Importamos useRef
 import {
   FaFacebook,
   FaInstagram,
-  FaTwitter,
   FaLinkedin,
-  FaYoutube,
   FaRegTimesCircle
 } from "react-icons/fa";
-import { FiMenu } from "react-icons/fi";
+import { FiMenu, FiSearch, FiShoppingCart } from "react-icons/fi";
 
 interface NavbarProps {
   toggleMenu: () => void;
@@ -20,63 +18,89 @@ interface NavbarProps {
 export default function Navbar({ toggleMenu, isMenuOpen }: NavbarProps) {
   // Referencia al menú lateral
   const menuRef = useRef<HTMLDivElement>(null);
+  const NAVBAR_HEIGHT = "4rem"; // 64px
 
   // Cerrar el menú al hacer clic fuera de él
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       // Si el menú está abierto y el clic fue fuera del menú
       if (isMenuOpen && menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        toggleMenu(); // Cierra el menú
+        toggleMenu();
       }
     };
 
     // Agregar el listener al documento
     document.addEventListener("mousedown", handleClickOutside);
-
-    // Limpiar el listener al desmontar el componente
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isMenuOpen, toggleMenu]);
-
   return (
     <>
-      {/* Navbar Superior (tu código existente) */}
-      <nav className="fixed top-0 left-0 w-full z-20 flex items-center justify-between p-2 bg-black/30 backdrop-blur-sm text-white">
-        {/* Logo + título */}
+      <nav 
+        className="fixed top-0 left-0 w-full z-20 flex items-center justify-between p-2 bg-black/30 backdrop-blur-sm text-white"
+        style={{ height: NAVBAR_HEIGHT }}
+      >
 
-        <div className="flex items-center gap-2">
+<div className="container mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/images/logo.png" alt="Logo" width={50} height={50} />
+            <Image 
+              src="/images/logo.png" 
+              alt="Logo" 
+              width={80} 
+              height={80}
+              className="w-12 h-12 md:w-16 md:h-16"
+            />
           </Link>
 
+          {/* Renderiza los links sólo si el menú está cerrado */}
+          {!isMenuOpen && (
+            <div className="hidden md:flex space-x-6">
+              <Link href="/custom-dolls" className="nav-link">Funkos</Link>
+              <Link href="/tienda3D" className="nav-link">Tienda 3D</Link>
+              <Link href="/blog" className="nav-link">Imprimi 3D</Link>
+              <Link href="/contacto" className="nav-link">Contacto</Link>
+            </div>
+          )}
+
+          {/* Íconos de búsqueda, carrito y botón de menú */}
+         <div className="flex items-center space-x-4 md:space-x-6">
+            <button aria-label="Buscar">
+              <FiSearch className="icon" />
+            </button>
+            <button aria-label="Carrito">
+              <FiShoppingCart className="icon" />
+            </button>
+            <button 
+              onClick={toggleMenu} 
+              aria-label={isMenuOpen ? "Cerrar menú" : "Abrir menú"}
+              className="text-2xl focus:outline-none"
+            >
+              {isMenuOpen ? <FaRegTimesCircle className="icon-lg" /> : <FiMenu className="icon-lg" />}
+            </button>
+          </div>
         </div>
-
-
-        {/* Botón hamburguesa */}
-        <button onClick={toggleMenu} className="text-2xl focus:outline-none">
-          {isMenuOpen ? <FaRegTimesCircle className="w-7 h-7" /> : <FiMenu className="w-7 h-7" />}
-        </button>
       </nav>
+      <div style={{ height: NAVBAR_HEIGHT }} aria-hidden="true" />
 
       {/* Menú Lateral Derecho */}
-      <div
-        ref={menuRef} // Asignamos la referencia al menú
-        className={`menu-sidebar fixed top-0 right-0 w-1/2 h-full bg-black/90 backdrop-blur-sm transform transition-transform duration-300 ease-in-out z-10 ${isMenuOpen ? "translate-x-0 delay-300" : "translate-x-full delay-0"
-          }`}
+       <div
+        ref={menuRef}
+        className={`fixed top-0 right-0 w-3/4 md:w-1/2 h-full bg-black/90 backdrop-blur-sm transform transition-transform duration-300 ease-in-out z-10 ${
+          isMenuOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+        style={{ marginTop: NAVBAR_HEIGHT }}
       >
         {/* Contenido del Menú (Centrado Verticalmente) */}
         <div className="p-6 h-full flex flex-col justify-center mt-16">
           {/* Secciones Principales */}
           <div className="space-y-4">
             <Link href="/" className="block py-3 hover:text-blue-400 transition-colors border-b border-gray-700" onClick={toggleMenu}>
-              Inicio
+              Funkos
             </Link>
             <Link href="/servicios" className="block py-3 hover:text-blue-400 transition-colors border-b border-gray-700" onClick={toggleMenu}>
-              Servicios
+              Tienda 3D
             </Link>
             <Link href="/blog" className="block py-3 hover:text-blue-400 transition-colors border-b border-gray-700" onClick={toggleMenu}>
-              ¡Dedicanos una reseña de tu pedido!
+              Imprimi 3D
             </Link>
             <Link href="/contacto" className="block py-3 hover:text-blue-400 transition-colors" onClick={toggleMenu}>
               Contacto
@@ -93,15 +117,11 @@ export default function Navbar({ toggleMenu, isMenuOpen }: NavbarProps) {
               <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-pink-400 transition-colors">
                 <FaInstagram />
               </a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="hover:text-blue-300 transition-colors">
-                <FaTwitter />
-              </a>
+
               <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 transition-colors">
                 <FaLinkedin />
               </a>
-              <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="hover:text-red-500 transition-colors">
-                <FaYoutube />
-              </a>
+
             </div>
           </div>
         </div>

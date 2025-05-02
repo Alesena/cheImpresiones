@@ -1,29 +1,25 @@
-import { useState, ChangeEvent } from 'react';
+import { ChangeEvent } from 'react';
+
 interface DescriptionInputProps {
   placeholderText: string;
+  value: string;
+  onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
 }
-export default function DescriptionInput({placeholderText}:DescriptionInputProps){
-  const [description, setDescription] = useState('');
 
-  const handleDescriptionChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
-    setDescription(event.target.value);
-  };
-
+export default function DescriptionInput({ placeholderText, value, onChange }: DescriptionInputProps) {
   return (
-    <div className='flex flex-col'>
+    <div className="flex flex-col">
       <label htmlFor="description">Descripción:</label>
       <textarea
-      className='mt-2 rounded border border-gray-300 p-2'
         id="description"
         name="description"
-        value={description}
-        onChange={handleDescriptionChange}
-        rows={4} // Número de filas visibles
-        cols={50} // Número de columnas visibles
+        value={value}
+        onChange={onChange}
         placeholder={placeholderText}
+        rows={4}
+        cols={50}
+        className="mt-2 rounded border border-gray-300 p-2"
       />
     </div>
   );
 }
-
-

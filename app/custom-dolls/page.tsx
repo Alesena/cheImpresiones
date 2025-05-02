@@ -183,7 +183,9 @@ export default function PersonalizarFunko() {
                 </div>
 
                 {/* Componente para ingresar detalles adicionales */}
-                <DescriptionInput placeholderText="Detalla más el funko, ropa favorita, etc." />
+                <DescriptionInput placeholderText="Detalla más el funko, ropa favorita, etc." value={""} onChange={function (event: ChangeEvent<HTMLTextAreaElement>): void {
+                  throw new Error("Function not implemented.");
+                } } />
               </div>
 
               <div className="w-full space-y-4">

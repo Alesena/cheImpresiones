@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import Image from "next/image";
 
 /** Props para el componente WordReveal */
@@ -69,32 +68,47 @@ export default function HomePage() {
   const textoSobreNosotros2 = `
   Además, contamos con servicios profesionales de impresión 3D. Desde la creación de prototipos hasta piezas decorativas o regalos personalizados, transformamos tus proyectos en objetos tangibles con la más alta calidad. Nuestro equipo combina la pasión por el diseño con la tecnología más avanzada para asegurar resultados excepcionales.
 `;
-  
+
 
   return (
     <div>
-      {/* Hero Section con video de fondo */}
       <section className="relative h-screen flex flex-col justify-center items-center text-center overflow-hidden">
-        {/* Video de fondo */}
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute top-0 left-0 w-full h-full object-cover z-0"
-        >
-          <source src="/videos/fondo.mp4" type="video/mp4" />
-          Tu navegador no soporta videos HTML5.
-        </video>
+        {/* Imagen de fondo */}
+        <div
+          className="absolute top-0 left-0 w-full h-full z-0"
+          style={{
+            backgroundImage: "url('/images/fondo-page.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center"
+          }}
+        />
+
+        {/* Capa de opacidad color bordó */}
+        <div
+          className="absolute top-0 left-0 w-full h-full z-1"
+        
+        />
 
         {/* Contenido superpuesto */}
-        <div className="relative z-10 bg-black/50 p-8 rounded-lg">
-          <h1 className="text-5xl font-bold mb-4">Funkos personalizados</h1>
-          <Link href="/custom-dolls">
-            <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
-              ¡Pedi el tuyo!
-            </button>
-          </Link>
+        <div className="relative z-10 p-8 rounded-lg">
+          <h1 className="font-titulo text-7xl font-bold mb-2">Che!</h1>
+          <div className="flex justify-end">
+            <h1 className="font-cuerpo text-4xl font-bold mb-6">Impresiones 3D</h1>
+          </div>
+          
+        </div>
+
+        {/* Separador de zigzag redondeado */}
+        <div className="absolute bottom-0 left-0 right-0 z-10">
+          <svg
+            viewBox="0 0 1200 120"
+            preserveAspectRatio="none"
+            className="w-full h-16 sm:h-24 text-white fill-current"
+          >
+            <path
+              d="M321.12,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V56.44Z"
+            ></path>
+          </svg>
         </div>
       </section>
 
@@ -128,7 +142,7 @@ export default function HomePage() {
               ></Image>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-lg flex justify-center items-center ">
-            <Image
+              <Image
                 src="/images/funko3.jpg"
                 alt="Funko 1"
                 width={300}
@@ -136,7 +150,7 @@ export default function HomePage() {
               ></Image>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-lg">
-            <Image
+              <Image
                 className="mx-auto"
                 src="/images/funko4.jpg"
                 alt="Funko 1"
