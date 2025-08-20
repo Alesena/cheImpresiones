@@ -4,10 +4,15 @@
 import { useState } from 'react';
 import Head from 'next/head';
 
+// Tipos para materiales y colores
+type MaterialType = 'PLA' | 'ABS' | 'PETG';
+type ColorType = 'Blanco' | 'Negro' | 'Rojo' | 'Azul' | 'Verde' | 'Amarillo' | 'Natural' | 'Transparente';
+
 export default function Tienda3DPage() {
+  // Estados del formulario
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [selectedMaterial, setSelectedMaterial] = useState('PLA');
-  const [selectedColor, setSelectedColor] = useState('');
+  const [selectedMaterial, setSelectedMaterial] = useState<MaterialType>('PLA');
+  const [selectedColor, setSelectedColor] = useState<ColorType>('Blanco');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -17,19 +22,55 @@ export default function Tienda3DPage() {
     name: ''
   });
 
+  // Configuración de materiales
+  const materialsConfig = {
+    PLA: ['Blanco', 'Negro', 'Rojo', 'Azul', 'Verde', 'Amarillo', 'Natural'],
+    ABS: ['Blanco', 'Negro', 'Rojo', 'Azul', 'Natural'],
+    PETG: ['Transparente', 'Blanco', 'Negro', 'Azul']
+  };
+
+  // Mapeo de colores a códigos HEX
+  const colorMap: Record<ColorType, string> = {
+    'Blanco': '#FFFFFF',
+    'Negro': '#000000',
+    'Rojo': '#FF0000',
+    'Azul': '#0000FF',
+    'Verde': '#00FF00',
+    'Amarillo': '#FFFF00',
+    'Natural': '#F5E7C1',
+    'Transparente': 'rgba(255,255,255,0.3)'
+  };
+
+  // Manejo de subida de archivos
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      // Validar solo tamaño máximo (2.4GB)
-      if (files[0].size > 2.4 * 1024 * 1024 * 1024) {
+      const file = files[0];
+
+      // Validación de tipo
+      if (typeof file.size !== 'number') {
+        setError('Formato de archivo no válido');
+        return;
+      }
+
+      // Validar tamaño máximo (2.4GB)
+      const MAX_SIZE = 2.4 * 1024 * 1024 * 1024; // 2.4GB en bytes
+      if (file.size > MAX_SIZE) {
         setError('El archivo es demasiado grande (máximo 2.4GB)');
         return;
       }
+
       setError('');
-      setSelectedFile(files[0]);
+
+      // Calcular tamaño en MB con seguridad
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      console.log(`Archivo subido: ${file.name} (${fileSizeMB} MB)`);
+
+      setSelectedFile(file);
     }
   };
 
+  // Manejo del modal
   const handleNextClick = () => {
     if (!selectedFile) {
       setError('Por favor selecciona un archivo primero');
@@ -38,48 +79,52 @@ export default function Tienda3DPage() {
     setShowModal(true);
   };
 
+  // Manejo de datos del cliente
   const handleCustomerDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setCustomerData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Envío del formulario
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!customerData.email) {
       setError('Por favor ingresa tu email');
       return;
     }
-  
+
     setIsSubmitting(true);
     setError('');
-  
-    const formData = new FormData();
-    formData.append('file', selectedFile!);
-    formData.append('material', selectedMaterial);
-    formData.append('color', selectedColor);
-    formData.append('userEmail', customerData.email);
-    if (customerData.name) formData.append('userName', customerData.name);
-  
+
     try {
+      // Convertir archivo a Base64
+      const fileBase64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(selectedFile!);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = error => reject(error);
+      });
+
+      // Enviar datos al endpoint API
       const response = await fetch('/api/3d-orders', {
         method: 'POST',
-        body: formData,
-        // No incluir headers['Content-Type'] - FormData lo establece automáticamente
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileData: fileBase64.split(',')[1], // Quitar prefijo DataURL
+          fileName: selectedFile!.name,
+          material: selectedMaterial,
+          color: selectedColor,
+          userEmail: customerData.email,
+          userName: customerData.name
+        }),
       });
-  
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        const text = await response.text();
-        throw new Error(text || 'Respuesta no JSON del servidor');
-      }
-  
-      const data = await response.json();
-  
+
       if (!response.ok) {
-        throw new Error(data.error || 'Error al enviar el pedido');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al enviar el pedido');
       }
-  
+
       setSubmitSuccess(true);
       setShowModal(false);
     } catch (err) {
@@ -90,6 +135,7 @@ export default function Tienda3DPage() {
     }
   };
 
+  // Vista de éxito
   if (submitSuccess) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -104,7 +150,7 @@ export default function Tienda3DPage() {
               setSelectedFile(null);
               setCustomerData({ email: '', name: '' });
             }}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded"
+            className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded transition-colors"
           >
             Hacer otro pedido
           </button>
@@ -122,8 +168,8 @@ export default function Tienda3DPage() {
 
       <div className="min-h-screen bg-gray-50 py-12 px-4">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-800 mb-8">1 MATERIAL - PLÁSTICO</h1>
-          
+          <h1 className="text-2xl font-bold text-gray-800 mb-8">IMPRESIÓN 3D PERSONALIZADA</h1>
+
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
               {error}
@@ -134,36 +180,42 @@ export default function Tienda3DPage() {
             {/* Columna Izquierda - Subida de archivos */}
             <div className="flex-1 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
               <div className="mb-6">
-                <h2 className="text-lg font-medium text-gray-800 mb-4">Arrastra los archivos para subirlos</h2>
-                
+                <h2 className="text-lg font-medium text-gray-800 mb-4">Sube tu archivo 3D</h2>
+
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center mb-4">
                   <label className="flex flex-col items-center justify-center cursor-pointer">
                     <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                     </svg>
-                    <span className="text-gray-600 mb-1">o selecciona un archivo</span>
-                    <span className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded inline-block">
-                      Elegir archivo
-                      <input 
-                        type="file" 
-                        className="hidden" 
+                    <span className="text-gray-600 mb-1">Arrastra tu archivo aquí</span>
+                    <span className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded inline-block transition-colors">
+                      Seleccionar archivo
+                      <input
+                        type="file"
+                        className="hidden"
                         onChange={handleFileUpload}
-                        accept=".stl,.obj,.3mf,.amf" 
+                        accept=".stl,.obj,.3mf,.amf"
                       />
                     </span>
                   </label>
                 </div>
 
                 {selectedFile && (
-                  <p className="text-sm text-green-600 mb-4">
-                    Archivo seleccionado: {selectedFile.name} ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
-                  </p>
+                  <div className="bg-green-50 border border-green-200 rounded p-3 mb-4">
+                    <p className="text-sm text-green-700">
+                      <span className="font-medium">Archivo seleccionado:</span> {selectedFile.name}
+                    </p>
+                    <p className="text-xs text-green-600 mt-1">
+                      Tamaño: {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
+                    </p>
+                  </div>
                 )}
 
                 <div className="text-xs text-gray-500">
-                  <p className="font-medium mb-1">Formatos aceptables:</p>
-                  <p>STL, OBJ, <span className="italic">3MF, AMF</span></p>
-                  <p className="mt-2">El tamaño máximo del archivo es 2.4GB</p>
+                  <p className="font-medium mb-1">Formatos aceptados:</p>
+                  <p>STL, OBJ, 3MF, AMF</p>
+                  <p className="mt-2 font-medium">Tamaño máximo:</p>
+                  <p>2.4GB</p>
                 </div>
               </div>
             </div>
@@ -171,80 +223,49 @@ export default function Tienda3DPage() {
             {/* Columna Derecha - Selección de materiales */}
             <div className="flex-1 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
               <div className="mb-8">
-                <h2 className="text-lg font-medium text-gray-800 mb-4">Selecciona tu material</h2>
-                
-                <div className="space-y-4">
+                <h2 className="text-lg font-medium text-gray-800 mb-4">Configura tu impresión</h2>
+
+                <div className="space-y-6">
+                  {/* Selección de material */}
                   <div>
-                    <h3 className="font-medium text-gray-700 mb-2">PLA</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {['Blanco', 'Negro', 'Rojo', 'Azul', 'Verde', 'Amarillo'].map(color => (
-                        <div 
-                          key={`PLA-${color}`}
-                          className={`w-8 h-8 rounded-full border border-gray-200 cursor-pointer hover:ring-2 hover:ring-blue-300 ${
-                            selectedMaterial === 'PLA' && selectedColor === color ? 'ring-2 ring-blue-500' : ''
-                          }`}
-                          style={{ 
-                            backgroundColor: color === 'Blanco' ? '#fff' : 
-                                            color === 'Negro' ? '#000' : 
-                                            color === 'Rojo' ? '#f00' : 
-                                            color === 'Azul' ? '#00f' : 
-                                            color === 'Verde' ? '#0f0' : '#ff0' 
-                          }}
+                    <h3 className="font-medium text-gray-700 mb-3">Material</h3>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {Object.keys(materialsConfig).map((material) => (
+                        <button
+                          key={material}
                           onClick={() => {
-                            setSelectedMaterial('PLA');
-                            setSelectedColor(color);
+                            setSelectedMaterial(material as MaterialType);
+                            setSelectedColor(materialsConfig[material as MaterialType][0] as ColorType);
                           }}
-                          title={color}
-                        />
+                          className={`px-3 py-1 border rounded-md text-sm ${selectedMaterial === material
+                            ? 'bg-blue-500 text-white border-blue-500'
+                            : 'border-gray-300 hover:bg-gray-50'
+                            }`}
+                        >
+                          {material}
+                        </button>
                       ))}
                     </div>
                   </div>
 
+                  {/* Selección de color */}
                   <div>
-                    <h3 className="font-medium text-gray-700 mb-2">PLA</h3>
+                    <h3 className="font-medium text-gray-700 mb-3">Color</h3>
                     <div className="flex flex-wrap gap-2">
-                      {['Blanco', 'Negro', 'Rojo', 'Azul', 'Verde', 'Amarillo'].map(color => (
-                        <div 
-                          key={`PLA-${color}`}
-                          className={`w-8 h-8 rounded-full border border-gray-200 cursor-pointer hover:ring-2 hover:ring-blue-300 ${
-                            selectedMaterial === 'PLA' && selectedColor === color ? 'ring-2 ring-blue-500' : ''
-                          }`}
-                          style={{ 
-                            backgroundColor: color === 'Blanco' ? '#fff' : 
-                                            color === 'Negro' ? '#000' : 
-                                            color === 'Rojo' ? '#f00' : 
-                                            color === 'Azul' ? '#00f' : 
-                                            color === 'Verde' ? '#0f0' : '#ff0' 
+                      {materialsConfig[selectedMaterial].map((color) => (
+                        <div
+                          key={`${selectedMaterial}-${color}`}
+                          className={`w-8 h-8 rounded-full border-2 cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all ${selectedColor === color ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-200'
+                            }`}
+                          style={{
+                            backgroundColor: colorMap[color as ColorType],
+                            ...(color === 'Transparente' ? {
+                              backgroundImage: 'linear-gradient(45deg, #ddd 25%, transparent 25%, transparent 75%, #ddd 75%, #ddd), linear-gradient(45deg, #ddd 25%, transparent 25%, transparent 75%, #ddd 75%, #ddd)',
+                              backgroundSize: '16px 16px',
+                              backgroundPosition: '0 0, 8px 8px'
+                            } : {})
                           }}
-                          onClick={() => {
-                            setSelectedMaterial('PLA');
-                            setSelectedColor(color);
-                          }}
-                          title={color}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-gray-700 mb-2">PLA</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {['Blanco', 'Negro', 'Rojo', 'Azul', 'Verde', 'Amarillo'].map(color => (
-                        <div 
-                          key={`PLA-${color}`}
-                          className={`w-8 h-8 rounded-full border border-gray-200 cursor-pointer hover:ring-2 hover:ring-blue-300 ${
-                            selectedMaterial === 'PLA' && selectedColor === color ? 'ring-2 ring-blue-500' : ''
-                          }`}
-                          style={{ 
-                            backgroundColor: color === 'Blanco' ? '#fff' : 
-                                            color === 'Negro' ? '#000' : 
-                                            color === 'Rojo' ? '#f00' : 
-                                            color === 'Azul' ? '#00f' : 
-                                            color === 'Verde' ? '#0f0' : '#ff0' 
-                          }}
-                          onClick={() => {
-                            setSelectedMaterial('PLA');
-                            setSelectedColor(color);
-                          }}
+                          onClick={() => setSelectedColor(color as ColorType)}
                           title={color}
                         />
                       ))}
@@ -253,26 +274,25 @@ export default function Tienda3DPage() {
                 </div>
               </div>
 
-              <button 
+              <button
                 onClick={handleNextClick}
                 disabled={!selectedFile}
-                className={`w-full text-white font-medium py-3 px-4 rounded-md text-sm mt-6 ${
-                  !selectedFile ? 'bg-gray-400 cursor-not-allowed' : 'bg-gray-900 hover:bg-gray-800'
-                }`}
+                className={`w-full text-white font-medium py-3 px-4 rounded-md text-sm mt-6 transition-colors ${!selectedFile ? 'bg-gray-400 cursor-not-allowed' : 'bg-gray-900 hover:bg-gray-800'
+                  }`}
               >
-                SIGUIENTE
+                CONTINUAR
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Modal/Popup para datos del cliente */}
+      {/* Modal para datos del cliente */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <h2 className="text-xl font-bold text-gray-800 mb-4">Completa tus datos</h2>
-            
+
             <form onSubmit={handleSubmit}>
               <div className="space-y-4 mb-6">
                 <div>
@@ -306,7 +326,7 @@ export default function Tienda3DPage() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
                   disabled={isSubmitting}
                 >
                   Cancelar
@@ -314,7 +334,7 @@ export default function Tienda3DPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-blue-300"
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-blue-300 transition-colors"
                 >
                   {isSubmitting ? (
                     <span className="flex items-center justify-center">
